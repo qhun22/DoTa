@@ -1,4 +1,7 @@
--- Hiệu ứng viết tay "qhun22" — Love2D 11.x
+-- main.lua — Dota Truyện Ký
+-- Flow: Intro (qhun22 viết tay) → Login screen
+local Login = require("login")
+local currentScene = "intro"   -- "intro" | "login"
 -- Mỗi ký tự vẽ theo thứ tự q → h → u → n → 2 → 2
 -- có nhấc bút giữa các nét, nội suy Catmull-Rom cho đường cong mượt.
 
@@ -180,7 +183,12 @@ function love.update(dt)
         if holdTimer >= CONFIG.holdDuration then
             phase = PHASE.DONE
             introComplete = true
+            -- Chuyển sang màn login
+            currentScene = "login"
+            Login.enter()
         end
+    elseif phase == PHASE.DONE then
+        Login.update(dt)
     end
 end
 
@@ -261,6 +269,12 @@ function love.draw()
         love.graphics.circle("fill", penX, penY, CONFIG.penGlowSize)
     end
 
+    -- Nếu đã sang login, vẽ login thay thế
+    if currentScene == "login" then
+        Login.draw()
+        return
+    end
+
     if introComplete then
         love.graphics.setColor(1, 1, 1, 0.2)
         love.graphics.print("[Space = replay · Esc = quit]", 10, love.graphics.getHeight() - 18)
@@ -272,18 +286,19 @@ end
 --============================================================
 function love.keypressed(key)
     if key == "escape" then love.event.quit() end
-    if key == "space" then
-        if introComplete then
-            phase = PHASE.FADE_IN
-            fadeTimer    = 0
-            holdTimer    = 0
-            drawnLen     = 0
-            introComplete = false
-        else
-            drawnLen     = totalLen
-            phase        = PHASE.DONE
-            introComplete = true
-        end
+    if key == "space" and currentScene == "intro" then
+        -- Skip intro
+        drawnLen      = totalLen
+        phase         = PHASE.DONE
+        introComplete = true
+        currentScene  = "login"
+        Login.enter()
+    end
+end
+
+function love.mousepressed(x, y, button)
+    if currentScene == "login" then
+        Login.mousepressed(x, y, button)
     end
 end
 
