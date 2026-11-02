@@ -7,7 +7,7 @@ workflows:
     environment:
       vars:
         BUNDLE_ID: "com.qhun22.dttk"
-        APP_NAME: "Dota Truyện Ký"
+        APP_NAME: "DotaTruyenKy"
         LOVE_VERSION: "11.5"
 
     scripts:

@@ -2,7 +2,7 @@ function love.conf(t)
     t.identity = "DotaTruyenKy"
     t.version  = "11.4"
 
-    t.window.title      = "Dota Truyện Ký"
+    t.window.title      = "DotaTruyenKy"
     t.window.icon       = "logo.jpg"    -- Icon app (447x447)
     t.window.width      = 844           -- iPhone 12 Pro logic width  (landscape)
     t.window.height     = 390           -- iPhone 12 Pro logic height (landscape)
