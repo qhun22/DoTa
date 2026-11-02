@@ -19,6 +19,14 @@ workflows:
           git clone --depth 1 --branch $LOVE_VERSION \
             https://github.com/love2d/love.git love-src
 
+      - name: Clone thư viện XCFramework cho iOS (freetype, SDL2, Lua, ...)
+        script: |
+          set -eo pipefail
+          git clone --depth 1 --branch $LOVE_VERSION \
+            https://github.com/love2d/love-apple-dependencies.git apple-deps
+          mv apple-deps/iOS/libraries love-src/platform/xcode/ios/libraries
+          ls love-src/platform/xcode/ios/libraries
+
       - name: Đóng gói game thành game.love
         script: |
           # Đóng gói toàn bộ game files (Lua + assets + font)

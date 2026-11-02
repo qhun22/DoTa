@@ -15,6 +15,7 @@ local C = {
     gold        = {251/255, 206/255, 16/255},        -- #fbce10
     versionGold = {229/255, 185/255, 85/255},         -- #e5b955
     divider     = {201/255, 167/255, 100/255, 0.35},
+    placeholder = {1, 1, 1, 0.35},
 }
 
 local assets = {}
@@ -206,9 +207,10 @@ function Login.draw()
     roundRect("line", fieldX, curY, fieldW, fieldH, 5)
 
     love.graphics.setFont(assets.fontField)
-    love.graphics.setColor(1, 1, 1, alpha)
     local fh = assets.fontField:getHeight()
-    love.graphics.print("1", fieldX + 14, math.floor(curY + (fieldH - fh) / 2))
+    local ph = C.placeholder
+    love.graphics.setColor(ph[1], ph[2], ph[3], ph[4] * alpha)
+    love.graphics.print("Nhập tài khoản", fieldX + 14, math.floor(curY + (fieldH - fh) / 2))
 
     curY = curY + fieldH + sectionGap
 
@@ -225,8 +227,8 @@ function Login.draw()
     roundRect("line", fieldX, curY, fieldW, fieldH, 5)
 
     love.graphics.setFont(assets.fontField)
-    love.graphics.setColor(1, 1, 1, alpha)
-    love.graphics.print("•", fieldX + 14, math.floor(curY + (fieldH - fh) / 2))
+    love.graphics.setColor(ph[1], ph[2], ph[3], ph[4] * alpha)
+    love.graphics.print("Nhập mật khẩu", fieldX + 14, math.floor(curY + (fieldH - fh) / 2))
 
     curY = curY + fieldH + btnMarginTop + sectionGap
 
