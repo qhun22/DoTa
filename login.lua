@@ -123,28 +123,33 @@ function Login.draw()
 
     -- ── 2. Modal ──────────────────────────────────────────────
     -- CSS: max-width 480px, width 92%, padding 26px 36px 30px, gap 18px
-    local modalW = math.min(480, W * 0.92)
-    local padX   = 36 * (modalW / 480)
+    -- compact: scale xuống khi màn hình thấp (landscape mobile 390px)
+    local compact    = math.min(1.0, H / 480)   -- 390px → 0.8125; 480px+ → 1.0
+
+    local modalW = math.min(400, W * 0.85)
+    local padX   = math.floor(36 * (modalW / 480))
     local innerW = modalW - padX * 2
 
-    -- Kích thước cố định từ CSS
     local TITLE_SPACING = 3    -- letter-spacing: 3px
     local BTN_SPACING   = 1.5  -- letter-spacing: 1.5px
-    local fieldH        = 44   -- padding 11px*2 + ~22px line-height
+    local fieldH        = math.floor(44 * compact)
     local labelH        = math.ceil(assets.fontLabel:getHeight())
-    local labelGap      = 7    -- gap: 7px giữa label và field
-    local sectionGap    = 18   -- gap: 18px giữa các section
+    local labelGap      = math.floor(7  * compact)
+    local sectionGap    = math.floor(18 * compact)
     local titleH        = math.ceil(assets.fontTitle:getHeight())
-    local headerH       = titleH + 12 + 1  -- title + padding-bottom 12px + divider 1px
-    local bsc           = 160 / assets.btn:getWidth()
+    local padTop        = math.floor(26 * compact)
+    local padBot        = math.floor(30 * compact)
+    local headerH       = titleH + math.floor(12 * compact) + 1
+    local btnW          = math.floor(160 * compact)
+    local bsc           = btnW / assets.btn:getWidth()
     local btnH          = math.ceil(assets.btn:getHeight() * bsc)
-    local btnMarginTop  = 10   -- margin: 10px auto 0 từ CSS
+    local btnMarginTop  = math.floor(10 * compact)
 
-    local modalH = 26 + headerH + sectionGap
+    local modalH = padTop + headerH + sectionGap
                  + (labelH + labelGap + fieldH) + sectionGap
                  + (labelH + labelGap + fieldH)
-                 + btnMarginTop + sectionGap + btnH + 30
-    modalH = math.min(modalH, H * 0.95)
+                 + btnMarginTop + sectionGap + btnH + padBot
+    modalH = math.min(modalH, H * 0.92)
 
     local mx = math.floor((W - modalW) / 2)
     local my = math.floor((H - modalH) / 2)
@@ -167,7 +172,7 @@ function Login.draw()
     -- ── 3. Tiêu đề "ĐĂNG NHẬP" ───────────────────────────────
     -- CSS: font-size 24px, font-weight 800, letter-spacing 3px
     local titleText = "ĐĂNG NHẬP"
-    local titleY    = my + 26
+    local titleY    = my + padTop
     local tW        = spacedWidth(assets.fontTitle, titleText, TITLE_SPACING)
 
     love.graphics.setFont(assets.fontTitle)
@@ -227,7 +232,6 @@ function Login.draw()
 
     -- ── 6. Nút ĐĂNG NHẬP ──────────────────────────────────────
     -- CSS: font-size 16px, font-weight 800, letter-spacing 1.5px, color #fbce10
-    local btnW  = 160
     local btnX  = math.floor(W/2 - btnW/2)
     local btnY  = curY
 
