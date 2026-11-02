@@ -1,0 +1,14 @@
+# Build output
+*.ipa
+Payload/
+build/
+
+# Love2D cache
+*.love
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode/
+*.swp
