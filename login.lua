@@ -54,22 +54,17 @@ local function printSpaced(font, text, x, y, spacing)
     end
 end
 
--- In text bold + letter-spacing (weight 800 simulation: vẽ 2 lần offset ±0.5px)
+-- In text với letter-spacing (dùng với ExtraBold font, không cần fake-bold)
 local function printBoldSpaced(font, text, x, y, spacing)
     local cx = x
     for ch in utf8chars(text) do
-        love.graphics.print(ch, cx - 0.5, y)
-        love.graphics.print(ch, cx + 0.5, y)
-        love.graphics.print(ch, cx,       y)
+        love.graphics.print(ch, cx, y)
         cx = cx + font:getWidth(ch) + spacing
     end
 end
 
--- In text bold (weight 700: vẽ 2 lần offset x ±0.4px)
 local function printBold(text, x, y)
-    love.graphics.print(text, x - 0.4, y)
-    love.graphics.print(text, x + 0.4, y)
-    love.graphics.print(text, x,       y)
+    love.graphics.print(text, x, y)
 end
 
 local function loadAssets()
@@ -79,17 +74,23 @@ local function loadAssets()
     assets.bg  = love.graphics.newImage("assets/mainlogin/loginbackground.png")
     assets.btn = love.graphics.newImage("assets/mainlogin/btnConfirm1.png")
 
-    local function sairaFont(size)
+    local function boldFont(size)
+        local ok, f = pcall(love.graphics.newFont, "assets/fonts/Saira-ExtraBold.ttf", size)
+        if ok then return f end
+        ok, f = pcall(love.graphics.newFont, "assets/fonts/Saira-Variable.ttf", size)
+        return ok and f or love.graphics.newFont(size)
+    end
+    local function regularFont(size)
         local ok, f = pcall(love.graphics.newFont, "assets/fonts/Saira-Variable.ttf", size)
         return ok and f or love.graphics.newFont(size)
     end
 
-    -- Kích thước khớp CSS: 24 / 14 / 15 / 16 / 13
-    assets.fontTitle = sairaFont(24)
-    assets.fontLabel = sairaFont(14)
-    assets.fontField = sairaFont(15)
-    assets.fontBtn   = sairaFont(16)
-    assets.fontVer   = sairaFont(13)
+    -- title/label/btn dùng ExtraBold (w800); field/ver dùng Variable (w400)
+    assets.fontTitle = boldFont(24)    -- CSS: 24px font-weight 800
+    assets.fontLabel = boldFont(14)    -- CSS: 14px font-weight 700
+    assets.fontField = regularFont(15) -- CSS: 15px (input text, regular)
+    assets.fontBtn   = boldFont(16)    -- CSS: 16px font-weight 800
+    assets.fontVer   = boldFont(13)    -- CSS: 13px font-weight 700
 
     local ok2, s = pcall(love.audio.newSource, "assets/audio/login_bgm.mp3", "stream")
     if ok2 then bgm = s; bgm:setLooping(true); bgm:setVolume(0.6); bgm:play() end
