@@ -35,44 +35,29 @@ workflows:
 
       - name: Tạo AppIcon.appiconset
         script: |
-          ICONSET="love-src/platform/xcode/ios/Images.xcassets/AppIcon.appiconset"
-          mkdir -p "$ICONSET"
+          set -eo pipefail
+          # Catalog icon THẬT mà Xcode project dùng (platform/xcode/Images.xcassets,
+          # KHÔNG PHẢI platform/xcode/ios/Images.xcassets) — giữ nguyên tên file gốc
+          # để không phải đụng tới Contents.json đã có sẵn.
+          ICONSET="love-src/platform/xcode/Images.xcassets/iOS AppIcon.appiconset"
+          if [ ! -d "$ICONSET" ]; then
+            echo "ERROR: khong tim thay $ICONSET"
+            exit 1
+          fi
 
-          # Tạo các kích thước icon iOS cần thiết
           declare -A SIZES=(
-            ["icon-20@2x.png"]=40   ["icon-20@3x.png"]=60
-            ["icon-29@2x.png"]=58   ["icon-29@3x.png"]=87
-            ["icon-40@2x.png"]=80   ["icon-40@3x.png"]=120
-            ["icon-60@2x.png"]=120  ["icon-60@3x.png"]=180
-            ["icon-76@1x.png"]=76   ["icon-76@2x.png"]=152
-            ["icon-83.5@2x.png"]=167
-            ["icon-1024@1x.png"]=1024
+            ["icon-29pt@1x.png"]=29     ["icon-29pt@2x.png"]=58    ["icon-29pt@3x.png"]=87
+            ["icon-40pt@1x.png"]=40     ["icon-40pt@2x.png"]=80    ["icon-40pt@3x.png"]=120
+            ["icon-60pt@2x.png"]=120    ["icon-60pt@3x.png"]=180
+            ["icon-76pt@1x.png"]=76     ["icon-76pt@2x.png"]=152
+            ["icon-83.5pt@2x.png"]=167
+            ["icon-1024pt@1x.png"]=1024
           )
           for file in "${!SIZES[@]}"; do
             px="${SIZES[$file]}"
             convert logo.jpg -resize ${px}x${px}! "$ICONSET/$file"
           done
-
-          # Ghi Contents.json
-          cat > "$ICONSET/Contents.json" << 'EOF'
-          {
-            "images": [
-              {"size":"20x20","idiom":"iphone","scale":"2x","filename":"icon-20@2x.png"},
-              {"size":"20x20","idiom":"iphone","scale":"3x","filename":"icon-20@3x.png"},
-              {"size":"29x29","idiom":"iphone","scale":"2x","filename":"icon-29@2x.png"},
-              {"size":"29x29","idiom":"iphone","scale":"3x","filename":"icon-29@3x.png"},
-              {"size":"40x40","idiom":"iphone","scale":"2x","filename":"icon-40@2x.png"},
-              {"size":"40x40","idiom":"iphone","scale":"3x","filename":"icon-40@3x.png"},
-              {"size":"60x60","idiom":"iphone","scale":"2x","filename":"icon-60@2x.png"},
-              {"size":"60x60","idiom":"iphone","scale":"3x","filename":"icon-60@3x.png"},
-              {"size":"76x76","idiom":"ipad","scale":"1x","filename":"icon-76@1x.png"},
-              {"size":"76x76","idiom":"ipad","scale":"2x","filename":"icon-76@2x.png"},
-              {"size":"83.5x83.5","idiom":"ipad","scale":"2x","filename":"icon-83.5@2x.png"},
-              {"size":"1024x1024","idiom":"ios-marketing","scale":"1x","filename":"icon-1024@1x.png"}
-            ],
-            "info": {"version": 1, "author": "xcode"}
-          }
-          EOF
+          ls -la "$ICONSET"
 
       - name: Debug - liệt kê cấu trúc xcode
         script: |
@@ -83,9 +68,14 @@ workflows:
 
       - name: Patch Info.plist (bundle ID + tên app)
         script: |
-          # Tìm đúng Info.plist của iOS target
-          PLIST=$(find love-src/platform/xcode -name "Info.plist" \
-            | grep -iv "test\|mac\|macos" | head -1)
+          set -eo pipefail
+          # File plist thật của target iOS tên là love-ios.plist (không phải Info.plist)
+          PLIST="love-src/platform/xcode/ios/love-ios.plist"
+          if [ ! -f "$PLIST" ]; then
+            echo "ERROR: khong tim thay $PLIST"
+            find love-src/platform/xcode -name "*.plist"
+            exit 1
+          fi
           echo "Using plist: $PLIST"
 
           plutil -replace CFBundleIdentifier  -string "$BUNDLE_ID"    "$PLIST"
@@ -94,6 +84,9 @@ workflows:
           plutil -replace UISupportedInterfaceOrientations \
             -json '["UIInterfaceOrientationLandscapeLeft","UIInterfaceOrientationLandscapeRight"]' \
             "$PLIST" || true
+
+          echo "=== Noi dung sau khi patch ==="
+          plutil -p "$PLIST" | grep -i "CFBundleIdentifier\|CFBundleName\|CFBundleDisplayName"
 
       - name: Build .app (unsigned — dành cho TrollStore)
         script: |
