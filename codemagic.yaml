@@ -1,6 +1,6 @@
 workflows:
   dota-truyen-ky-ios:
-    name: Dota Truyện Ký · iOS IPA
+    name: Dota Truyen Ky · iOS IPA
     max_build_duration: 60
     instance_type: mac_mini_m1
 
