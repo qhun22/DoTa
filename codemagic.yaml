@@ -21,7 +21,8 @@ workflows:
 
       - name: Đóng gói game thành game.love
         script: |
-          zip -j game.love conf.lua main.lua logo.jpg
+          # Đóng gói toàn bộ game files (Lua + assets + font)
+          zip -r game.love conf.lua main.lua login.lua logo.jpg assets/
           cp game.love love-src/platform/xcode/
 
       - name: Tạo AppIcon.appiconset
@@ -65,15 +66,26 @@ workflows:
           }
           EOF
 
+      - name: Debug - liệt kê cấu trúc xcode
+        script: |
+          echo "=== platform/xcode layout ==="
+          find love-src/platform/xcode -maxdepth 3 -name "*.plist" | sort
+          echo "=== schemes ==="
+          xcodebuild -project love-src/platform/xcode/love.xcodeproj -list 2>&1 | head -30
+
       - name: Patch Info.plist (bundle ID + tên app)
         script: |
-          PLIST="love-src/platform/xcode/ios/Info.plist"
-          plutil -replace CFBundleIdentifier  -string "$BUNDLE_ID" "$PLIST"
-          plutil -replace CFBundleName        -string "DotaTruyenKy" "$PLIST"
-          plutil -replace CFBundleDisplayName -string "$APP_NAME" "$PLIST"
-          # Khóa landscape
+          # Tìm đúng Info.plist của iOS target
+          PLIST=$(find love-src/platform/xcode -name "Info.plist" \
+            | grep -iv "test\|mac\|macos" | head -1)
+          echo "Using plist: $PLIST"
+
+          plutil -replace CFBundleIdentifier  -string "$BUNDLE_ID"    "$PLIST"
+          plutil -replace CFBundleName        -string "DotaTruyenKy"  "$PLIST"
+          plutil -replace CFBundleDisplayName -string "$APP_NAME"     "$PLIST"
           plutil -replace UISupportedInterfaceOrientations \
-            -json '["UIInterfaceOrientationLandscapeLeft","UIInterfaceOrientationLandscapeRight"]' "$PLIST"
+            -json '["UIInterfaceOrientationLandscapeLeft","UIInterfaceOrientationLandscapeRight"]' \
+            "$PLIST" || true
 
       - name: Build .app (unsigned — dành cho TrollStore)
         script: |
