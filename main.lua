@@ -195,6 +195,12 @@ end
 function love.draw()
     love.graphics.clear(0, 0, 0)
 
+    -- Scene routing — phải check TRƯỚC khi vẽ bất kỳ thứ gì
+    if currentScene == "login" then
+        Login.draw()
+        return
+    end
+
     local penX, penY
 
     -- ── Fade-in: chấm sáng nhỏ tại điểm bắt đầu ──
@@ -267,12 +273,6 @@ function love.draw()
         love.graphics.circle("fill", penX, penY, CONFIG.penGlowSize * 0.5)
         love.graphics.setColor(1, 1, 1, 0.1)
         love.graphics.circle("fill", penX, penY, CONFIG.penGlowSize)
-    end
-
-    -- Nếu đã sang login, vẽ login thay thế
-    if currentScene == "login" then
-        Login.draw()
-        return
     end
 
     if introComplete then
