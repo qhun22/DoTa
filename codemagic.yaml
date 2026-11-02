@@ -89,33 +89,64 @@ workflows:
 
       - name: Build .app (unsigned — dành cho TrollStore)
         script: |
+          set -eo pipefail
           cd love-src/platform/xcode
+
+          # Tìm đúng scheme iOS
+          SCHEME=$(xcodebuild -project love.xcodeproj -list 2>/dev/null \
+            | grep -i "ios\|iPhone" | head -1 | xargs || echo "love-ios")
+          echo "Using scheme: $SCHEME"
+
           xcodebuild \
             -project love.xcodeproj \
-            -scheme love-ios \
+            -scheme "$SCHEME" \
             -configuration Release \
             -sdk iphoneos \
             -derivedDataPath "$CM_BUILD_DIR/build" \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
-            PRODUCT_BUNDLE_IDENTIFIER="$BUNDLE_ID" \
-            | xcpretty
+            AD_HOC_CODE_SIGNING_ALLOWED=YES \
+            PRODUCT_BUNDLE_IDENTIFIER="$BUNDLE_ID"
+
+          echo "=== Build output ==="
+          find "$CM_BUILD_DIR/build" -name "*.app" | head -5
 
       - name: Nhúng game.love vào .app bundle
         script: |
-          APP=$(find "$CM_BUILD_DIR/build" -name "*.app" | head -1)
-          cp game.love "$APP/game.love"
+          set -eo pipefail
+          APP=$(find "$CM_BUILD_DIR/build" -name "*.app" \
+            -not -path "*/Build/Intermediates*" | head -1)
+
+          if [ -z "$APP" ]; then
+            echo "ERROR: .app bundle not found!"
+            find "$CM_BUILD_DIR/build" -maxdepth 6 | sort
+            exit 1
+          fi
+
           echo "App bundle: $APP"
+          cp game.love "$APP/game.love"
+          ls -lh "$APP/game.love"
 
       - name: Đóng gói thành IPA
         script: |
-          APP=$(find "$CM_BUILD_DIR/build" -name "*.app" | head -1)
+          set -eo pipefail
+          APP=$(find "$CM_BUILD_DIR/build" -name "*.app" \
+            -not -path "*/Build/Intermediates*" | head -1)
+
           mkdir -p "$CM_BUILD_DIR/Payload"
           cp -r "$APP" "$CM_BUILD_DIR/Payload/DotaTruyenKy.app"
           cd "$CM_BUILD_DIR"
           zip -r DotaTruyenKy.ipa Payload
-          echo "IPA size: $(du -sh DotaTruyenKy.ipa)"
+
+          SIZE=$(du -sh DotaTruyenKy.ipa | cut -f1)
+          echo "IPA size: $SIZE"
+          # Fail nếu IPA nhỏ hơn 1MB (rõ ràng là rỗng)
+          BYTES=$(stat -f%z DotaTruyenKy.ipa 2>/dev/null || stat -c%s DotaTruyenKy.ipa)
+          if [ "$BYTES" -lt 1000000 ]; then
+            echo "ERROR: IPA quá nhỏ ($BYTES bytes), build thất bại!"
+            exit 1
+          fi
 
     artifacts:
       - "$CM_BUILD_DIR/DotaTruyenKy.ipa"
